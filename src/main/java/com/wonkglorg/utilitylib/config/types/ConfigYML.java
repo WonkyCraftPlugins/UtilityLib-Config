@@ -1,5 +1,6 @@
 package com.wonkglorg.utilitylib.config.types;
 
+import com.google.common.hash.Hasher;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
@@ -17,11 +18,13 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 /**
  * @author Wonkglorg
@@ -218,7 +221,6 @@ public class ConfigYML extends YamlConfiguration implements Config {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 }
             } else {
-                FILE.getParentFile().mkdirs();
                 try {
                     FILE.createNewFile();
                 } catch (IOException e) {
