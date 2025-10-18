@@ -1,15 +1,10 @@
 package com.wonkglorg.utilitylib.config;
 
-import com.wonkglorg.utilitylib.config.lang.ValueReplacer;
+import com.wonkglorg.utilitylib.config.lang.LangRequest;
 import com.wonkglorg.utilitylib.config.types.Config;
 import com.wonkglorg.utilitylib.config.types.LangConfig;
-import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -20,7 +15,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -248,6 +242,50 @@ public final class LangManager{
 	}
 	
 	/**
+	 * Requests a value from the lang file, allow for further modifications unlike {@link #getValue}
+	 *
+	 * @param key the key to look up
+	 * @return a {@link LangRequest} object
+	 */
+	public LangRequest requestValue(final String key) {
+		return new LangRequest(this, null, key, key);
+	}
+	
+	/**
+	 * Requests a value from the lang file, allow for further modifications unlike {@link #getValue(String, String)}
+	 *
+	 * @param key the key to look up
+	 * @param defaultValue a default value to return if no value was found for the given key
+	 * @return a {@link LangRequest} object
+	 */
+	public LangRequest requestValue(final String key, final String defaultValue) {
+		return new LangRequest(this, null, key, defaultValue);
+	}
+	
+	/**
+	 * Requests a value from the lang file, allow for further modifications unlike {@link #getValue(Locale, String)}
+	 *
+	 * @param locale the locale to use (falls back to the default if not available)
+	 * @param key the key to look up
+	 * @return a {@link LangRequest} object
+	 */
+	public LangRequest requestValue(final Locale locale, final String key) {
+		return new LangRequest(this, locale, key, key);
+	}
+	
+	/**
+	 * Requests a value from the lang file, allow for further modifications unlike {@link #getValue(Locale, String, String)}
+	 *
+	 * @param locale the locale to use (falls back to the default if not available)
+	 * @param key the key to look up
+	 * @param defaultValue a default value to return if no value was found for the given key
+	 * @return a {@link LangRequest} object
+	 */
+	public LangRequest requestValue(final Locale locale, final String key, final String defaultValue) {
+		return new LangRequest(this, locale, key, defaultValue);
+	}
+	
+	/**
 	 * Gets a value from the default language file with replacements applied
 	 *
 	 * @param key the key to get ny
@@ -255,7 +293,19 @@ public final class LangManager{
 	 */
 	@Contract(pure = true, value = "null -> null")
 	public String getValue(String key) {
-		return getValue((Locale) null, key, key);
+		return getValue(null, key, key);
+	}
+	
+	/**
+	 * Gets a value from the default language file with replacements applied
+	 *
+	 * @param key the key to get by
+	 * @param defaultValue the default value to return if no value was found
+	 * @return the returned result or the value if no result was found
+	 */
+	@Contract(pure = true, value = "_, null -> null")
+	public String getValue(final String key, final String defaultValue) {
+		return getValue(null, key, defaultValue);
 	}
 	
 	/**
@@ -268,31 +318,6 @@ public final class LangManager{
 	@Contract(pure = true, value = "_, null -> null")
 	public String getValue(final Locale locale, final String key) {
 		return getValue(locale, key, key);
-	}
-	
-	/**
-	 * Gets a value from the default language file with replacements applied
-	 *
-	 * @param player the player to determine the locale for
-	 * @param key the key to get by
-	 * @return the returned result or the value if no result was found
-	 */
-	@Contract(pure = true, value = "_, null -> null")
-	public String getValue(final Player player, final String key) {
-		return getValue(player.locale(), key, key);
-	}
-	
-	/**
-	 * Gets a value from the default language file with replacements applied
-	 *
-	 * @param player the player to determine the locale to get the value from
-	 * @param key the key to get by
-	 * @param defaultValue the default value to return if no value was found
-	 * @return the returned result or the value if no result was found
-	 */
-	@Contract(pure = true, value = "_,null,null -> null; _,_,!null -> !null")
-	public String getValue(final Player player, final String key, final String defaultValue) {
-		return getValue(player.locale(), key, defaultValue);
 	}
 	
 	/**
@@ -317,7 +342,7 @@ public final class LangManager{
 		
 		String editString = config.getString(key);
 		if(editString == null){
-			return defaultValue;
+			editString = defaultValue;
 		}
 		
 		for(var mapValue : replacerMap.entrySet()){
@@ -334,104 +359,6 @@ public final class LangManager{
 		}
 		
 		return editString;
-	}
-	
-	/**
-	 * Sends a message to a player from the provided config
-	 *
-	 * @param audience the audience to send the message to
-	 * @param locale the locale to use
-	 * @param key the config key to resolve
-	 * @param defaultValue if no key is found use this value instead
-	 * @param toComponent function to convert to a valid component
-	 */
-	public void sendMessage(@NotNull final Audience audience,
-							final Locale locale,
-							final String key,
-							final String defaultValue,
-							@NotNull Function<String, Component> toComponent,
-							ValueReplacer... replacers) {
-		
-		String value = getValue(locale, key, defaultValue);
-		for(ValueReplacer replacer : replacers){
-			value = replacer.apply(value);
-		}
-		audience.sendMessage(toComponent.apply(value));
-	}
-	
-	/**
-	 * Sends a message to an audience from the provided config. If the audience is a player returns the config matching their locale, otherwise {@link #defaultLang} lang
-	 *
-	 * @param audience the audience to send the message to
-	 * @param key the config key to resolve
-	 * @param defaultValue if no key is found use this value instead
-	 * @param toComponent function to convert to a valid component
-	 */
-	public void sendMessage(@NotNull final Audience audience,
-							final String key,
-							final String defaultValue,
-							@NotNull Function<String, Component> toComponent,
-							ValueReplacer... replacers) {
-		if(audience instanceof Player player){
-			sendMessage(player, player.locale(), key, defaultValue, toComponent, replacers);
-		} else {
-			sendMessage(audience, Locale.ENGLISH, key, defaultValue, toComponent, replacers);
-		}
-	}
-	
-	/**
-	 * Sends a message to an audience from the provided config
-	 *
-	 * @param audience the audience to send the message to
-	 * @param locale the locale to use
-	 * @param key the config key to resolve
-	 * @param defaultValue if no key is found use this value instead
-	 */
-	public void sendMessage(@NotNull final Audience audience,
-							final Locale locale,
-							final String key,
-							final String defaultValue,
-							ValueReplacer... replacers) {
-		sendMessage(audience, locale, key, defaultValue, MiniMessage.miniMessage()::deserialize, replacers);
-	}
-	
-	/**
-	 * Sends a message to an audience from the provided config. If the audience is a player returns the config matching their locale, otherwise {@link #defaultLang} lang
-	 *
-	 * @param audience the audience to send the message to
-	 * @param key the config key to resolve
-	 * @param defaultValue if no key is found use this value instead
-	 */
-	public void sendMessage(@NotNull final Audience audience, final String key, final String defaultValue, ValueReplacer... replacers) {
-		if(audience instanceof Player player){
-			sendMessage(player, player.locale(), key, defaultValue, MiniMessage.miniMessage()::deserialize, replacers);
-		} else {
-			sendMessage(audience, Locale.getDefault(), key, defaultValue, MiniMessage.miniMessage()::deserialize, replacers);
-		}
-	}
-	
-	/**
-	 * Sends a message to an audience from the provided config
-	 *
-	 * @param audience the audience to send the message to
-	 * @param key the config key to resolve
-	 */
-	public void sendMessage(@NotNull final Audience audience, final Locale locale, final String key, ValueReplacer... replacers) {
-		sendMessage(audience, locale, key, key, MiniMessage.miniMessage()::deserialize, replacers);
-	}
-	
-	/**
-	 * Sends a message to an audience from the provided config. If the audience is a player returns the config matching their locale, otherwise {@link #defaultLang} lang
-	 *
-	 * @param audience the audience to send the message to
-	 * @param key the config key to resolve
-	 */
-	public void sendMessage(@NotNull final Audience audience, final String key, ValueReplacer... replacers) {
-		if(audience instanceof Player player){
-			sendMessage(player, player.locale(), key, key, MiniMessage.miniMessage()::deserialize, replacers);
-		} else {
-			sendMessage(audience, defaultLang, key, key, MiniMessage.miniMessage()::deserialize, replacers);
-		}
 	}
 	
 	/**
