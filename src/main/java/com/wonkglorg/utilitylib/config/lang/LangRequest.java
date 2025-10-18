@@ -15,6 +15,7 @@ import java.util.function.Function;
 /**
  * A Language Value request which can be further modified with additional properties and modifiers.
  */
+@SuppressWarnings("unused")
 public class LangRequest{
 	/**
 	 * The lang manager this request was returned by
@@ -44,6 +45,10 @@ public class LangRequest{
 	 * The current result made after all values are collected
 	 */
 	private String result;
+	/**
+	 * Weather or not the initially provided locale should be forced. If false certain methods may re request the message in the given language such as {@link #sendToAudience(Audience)}
+	 */
+	private boolean forceLocale = false;
 	
 	public LangRequest(LangManager langManager, Locale locale, String key, String defaultValue) {
 		this.langManager = langManager;
@@ -54,19 +59,31 @@ public class LangRequest{
 		this.result = initialResult;
 	}
 	
+	public LangRequest forceLocale(boolean forceLocale){
+		this.forceLocale = forceLocale;
+		return this;
+	}
+	
+	/**
+	 * Replaces the given value with its replacement
+	 */
 	public LangRequest replace(String value, String replacement) {
 		replacements.put(value, replacement);
 		result = result.replace(value, replacement);
 		return this;
 	}
-	
+	/**
+	 * Replaces the given value with its replacement
+	 */
 	public LangRequest replace(String value1, String replacement1, String value2, String replacement2) {
 		replacements.put(value1, replacement1);
 		replacements.put(value2, replacement2);
 		result = result.replace(value1, replacement1).replace(value2, replacement2);
 		return this;
 	}
-	
+	/**
+	 * Replaces the given value with its replacement
+	 */
 	public LangRequest replace(String value1, String replacement1, String value2, String replacement2, String value3, String replacement3) {
 		replacements.put(value1, replacement1);
 		replacements.put(value2, replacement2);
@@ -83,21 +100,35 @@ public class LangRequest{
 		return locale;
 	}
 	
-	private String updateResult(String result) {
+	/**
+	 * Updates the input with all replacements found in the populated replacement map
+	 * @param input to modify
+	 * @return modified input
+	 */
+	private String updateResult(String input) {
 		for(var replacement : replacements.entrySet()){
-			result = result.replace(replacement.getKey(), replacement.getValue());
+			input = input.replace(replacement.getKey(), replacement.getValue());
 		}
-		return result;
+		return input;
 	}
 	
 	public String getResult() {
 		return result;
 	}
 	
+	/**
+	 * Sends the request's result to the given audience using the MiniMessage formatting.
+	 * @param audience if the audience is a {@link Player} requests their locale to modify the message with unless {@link #forceLocale} is set to true.
+	 */
 	public void sendToAudience(@NotNull Audience audience) {
 		sendToAudience(audience, MiniMessage.miniMessage()::deserialize);
 	}
 	
+	/**
+	 * Sends the request's result to the given audience using the MiniMessage formatting.
+	 * @param audience if the audience is a {@link Player} requests their locale to modify the message with unless {@link #forceLocale} is set to true.
+	 * @param toComponent the function to use turning the result into a component to send
+	 */
 	public void sendToAudience(@NotNull Audience audience, Function<String, Component> toComponent) {
 		if(audience instanceof Player player){
 			if(player.locale() == locale){
