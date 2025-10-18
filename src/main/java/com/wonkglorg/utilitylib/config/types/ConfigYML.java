@@ -1,7 +1,5 @@
 package com.wonkglorg.utilitylib.config.types;
 
-import com.google.common.hash.Hasher;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -18,13 +16,11 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 /**
  * @author Wonkglorg
@@ -33,12 +29,12 @@ import java.util.stream.Stream;
 public class ConfigYML extends YamlConfiguration implements Config {
 
     //Add version control. Keep version in yml and add all new values which do not exist yet if current version is higher than the one already existing
-    protected final JavaPlugin PLUGIN;
-    protected final String NAME;
-    protected final Path SOURCE_PATH;
-    protected final Path DESTINATION_PATH;
-    protected final File FILE;
-    protected final Logger LOGGER = Bukkit.getLogger();
+    protected final JavaPlugin plugin;
+    protected final String name;
+    protected final Path sourcePath;
+    protected final Path destinationPath;
+    protected final File file;
+    protected final Logger logger;
 
     /**
      * Creates a new file at the specified location or copies an existing one from the resource folder based on the sourcePath,
@@ -49,11 +45,12 @@ public class ConfigYML extends YamlConfiguration implements Config {
      * @param destinationPath path to copy this file to
      */
     public ConfigYML(@NotNull JavaPlugin plugin, @NotNull Path sourcePath, @NotNull Path destinationPath) {
-        this.PLUGIN = plugin;
-        this.NAME = destinationPath.getFileName().toString();
-        this.SOURCE_PATH = sourcePath;
-        this.DESTINATION_PATH = destinationPath.startsWith(plugin.getDataFolder().toString()) ? destinationPath : Path.of(plugin.getDataFolder().toString(), destinationPath.toString());
-        FILE = new File(this.DESTINATION_PATH.toString());
+        this.plugin = plugin;
+		this.name = destinationPath.getFileName().toString();
+		this.sourcePath = sourcePath;
+		this.destinationPath = destinationPath.startsWith(plugin.getDataFolder().toString()) ? destinationPath : Path.of(plugin.getDataFolder().toString(), destinationPath.toString());
+		logger = plugin.getLogger();
+		file = new File(this.destinationPath.toString());
     }
 
 
@@ -142,9 +139,9 @@ public class ConfigYML extends YamlConfiguration implements Config {
 
     public void updateConfig() {
 
-        FileConfiguration existing = YamlConfiguration.loadConfiguration(FILE);
+        FileConfiguration existing = YamlConfiguration.loadConfiguration(file);
 
-        FileConfiguration newConfig = YamlConfiguration.loadConfiguration(SOURCE_PATH.toFile());
+        FileConfiguration newConfig = YamlConfiguration.loadConfiguration(sourcePath.toFile());
 
         for (Entry<String, Object> entry : newConfig.getValues(true).entrySet()) {
             if (!existing.contains(entry.getKey())) {
@@ -156,21 +153,21 @@ public class ConfigYML extends YamlConfiguration implements Config {
     public void load() {
         checkFile();
         try {
-            load(FILE);
-            LOGGER.log(Level.INFO, "Loaded data from " + NAME + "!");
+            load(file);
+            logger.log(Level.INFO, "Loaded data from " + name + "!");
         } catch (InvalidConfigurationException | IOException e) {
-            LOGGER.log(Level.SEVERE, e.getMessage());
-            LOGGER.log(Level.WARNING, "Error loading data from " + NAME + "!");
+            logger.log(Level.SEVERE, e.getMessage());
+            logger.log(Level.WARNING, "Error loading data from " + name + "!");
         }
     }
 
     public void silentLoad() {
         checkFile();
         try {
-            load(FILE);
+            load(file);
         } catch (InvalidConfigurationException | IOException e) {
-            LOGGER.log(Level.SEVERE, e.getMessage());
-            LOGGER.log(Level.WARNING, "Error loading data from " + NAME + "!");
+            logger.log(Level.SEVERE, e.getMessage());
+            logger.log(Level.WARNING, "Error loading data from " + name + "!");
         }
     }
 
@@ -178,53 +175,53 @@ public class ConfigYML extends YamlConfiguration implements Config {
         checkFile();
         try {
 
-            save(FILE);
-            LOGGER.log(Level.INFO, "Saved data to " + NAME + "!");
+            save(file);
+            logger.log(Level.INFO, "Saved data to " + name + "!");
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, e.getMessage());
-            LOGGER.log(Level.WARNING, "Error saving data to " + NAME + "!");
+            logger.log(Level.SEVERE, e.getMessage());
+            logger.log(Level.WARNING, "Error saving data to " + name + "!");
         }
     }
 
     public void silentSave() {
         checkFile();
         try {
-            save(FILE);
+            save(file);
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Error saving data to " + NAME + "!");
-            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.WARNING, "Error saving data to " + name + "!");
+            logger.log(Level.SEVERE, e.getMessage(), e);
         }
     }
 
     @Override
     public String name() {
-        return NAME;
+        return name;
     }
 
     @Override
     public String path() {
-        return DESTINATION_PATH.toString();
+        return destinationPath.toString();
     }
 
     /**
      * Checks if file exists in path, else create the file and all parent directories needed.
      */
     protected void checkFile() {
-        if (!FILE.exists()) {
-            FILE.getParentFile().mkdirs();
-            InputStream inputStream = PLUGIN.getResource(SOURCE_PATH.toString().replaceAll("\\\\", "/"));
+        if (!file.exists()) {
+            file.getParentFile().mkdirs();
+            InputStream inputStream = plugin.getResource(sourcePath.toString().replace("\\\\", "/"));
             if (inputStream != null) {
                 try {
-                    Files.copy(inputStream, DESTINATION_PATH);
+                    Files.copy(inputStream, destinationPath);
                 } catch (IOException e) {
-                    LOGGER.log(Level.SEVERE, "Error Copying data from " + SOURCE_PATH + " to destination " + DESTINATION_PATH);
-                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                    logger.log(Level.SEVERE, "Error Copying data from " + sourcePath + " to destination " + destinationPath);
+                    logger.log(Level.SEVERE, e.getMessage(), e);
                 }
             } else {
                 try {
-                    FILE.createNewFile();
+                    file.createNewFile();
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+					throw new IllegalStateException("Cannot create file " + sourcePath + "!", e);
                 }
             }
         }
@@ -232,7 +229,7 @@ public class ConfigYML extends YamlConfiguration implements Config {
 
     @Override
     public String toString() {
-        return String.format("ConfigYML[path=%s,name=%s]", DESTINATION_PATH.toString(), NAME);
+        return String.format("ConfigYML[path=%s,name=%s]", destinationPath.toString(), name);
     }
 
 }

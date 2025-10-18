@@ -59,7 +59,7 @@ public interface Config {
 
     List<Boolean> getBooleanList(@NotNull String path);
 
-    List<Map<?, ?>> getMapList(@NotNull String path);
+    @NotNull List<Map<?, ?>> getMapList(@NotNull String path); //NOSONAR needs to be wild cards
 
     <T> T getObject(@NotNull String path, @NotNull Class<T> clazz);
 

@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
+@SuppressWarnings("unused")
 public class LangConfig extends ConfigYML {
 
     /**
@@ -71,22 +72,23 @@ public class LangConfig extends ConfigYML {
         setUpdateRequest(true);
         checkFile();
         try {
-            load(FILE);
-            LOGGER.log(Level.INFO, "Loaded data from " + NAME + "!");
+            load(file);
+            logger.log(Level.INFO, "Loaded data from " + name + "!");
         } catch (InvalidConfigurationException | IOException e) {
-            LOGGER.log(Level.WARNING, "Error loading data from " + NAME + "!");
-            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.WARNING, "Error loading data from " + name + "!");
+            logger.log(Level.SEVERE, e.getMessage(), e);
         }
     }
-
+	
+	@Override
     public void silentLoad() {
         setUpdateRequest(true);
         checkFile();
         try {
-            load(FILE);
+            load(file);
         } catch (InvalidConfigurationException | IOException e) {
-            LOGGER.log(Level.WARNING, "Error loading data from " + NAME + "!");
-            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.WARNING, "Error loading data from " + name + "!");
+            logger.log(Level.SEVERE, e.getMessage(), e);
         }
     }
 
