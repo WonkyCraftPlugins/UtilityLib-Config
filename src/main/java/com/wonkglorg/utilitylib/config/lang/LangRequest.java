@@ -100,7 +100,7 @@ public class LangRequest{
 		return this;
 	}
 	
-	public String getInitialResult() {
+	public String getUnmodifiedResult() {
 		return initialResult;
 	}
 	
