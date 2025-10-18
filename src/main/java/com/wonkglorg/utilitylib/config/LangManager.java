@@ -94,7 +94,7 @@ public final class LangManager{
 	}
 	
 	/**
-	 * Adds a value to be replaced in the lang file whenever the {@link #getValue(String)} method is called
+	 * Adds a value to be replaced in the lang file whenever a request is made to retrieve a value, this is global for all requests. to replace a value for any specific request use {@link LangRequest#replace(String, String)}
 	 *
 	 * @param replace the value to be replaced
 	 * @param with the value to replace the original value with
@@ -242,123 +242,47 @@ public final class LangManager{
 	}
 	
 	/**
-	 * Requests a value from the lang file, allow for further modifications unlike {@link #getValue}
+	 * Requests a value from the lang file.
 	 *
 	 * @param key the key to look up
 	 * @return a {@link LangRequest} object
 	 */
-	public LangRequest requestValue(final String key) {
+	public LangRequest request(final String key) {
 		return new LangRequest(this, null, key, key);
 	}
 	
 	/**
-	 * Requests a value from the lang file, allow for further modifications unlike {@link #getValue(String, String)}
+	 * Requests a value from the lang file.
 	 *
 	 * @param key the key to look up
 	 * @param defaultValue a default value to return if no value was found for the given key
 	 * @return a {@link LangRequest} object
 	 */
-	public LangRequest requestValue(final String key, final String defaultValue) {
+	public LangRequest request(final String key, final String defaultValue) {
 		return new LangRequest(this, null, key, defaultValue);
 	}
 	
 	/**
-	 * Requests a value from the lang file, allow for further modifications unlike {@link #getValue(Locale, String)}
+	 * Requests a value from the lang file.
 	 *
 	 * @param locale the locale to use (falls back to the default if not available)
 	 * @param key the key to look up
 	 * @return a {@link LangRequest} object
 	 */
-	public LangRequest requestValue(final Locale locale, final String key) {
+	public LangRequest request(final Locale locale, final String key) {
 		return new LangRequest(this, locale, key, key);
 	}
 	
 	/**
-	 * Requests a value from the lang file, allow for further modifications unlike {@link #getValue(Locale, String, String)}
+	 * Requests a value from the lang file.
 	 *
 	 * @param locale the locale to use (falls back to the default if not available)
 	 * @param key the key to look up
 	 * @param defaultValue a default value to return if no value was found for the given key
 	 * @return a {@link LangRequest} object
 	 */
-	public LangRequest requestValue(final Locale locale, final String key, final String defaultValue) {
+	public LangRequest request(final Locale locale, final String key, final String defaultValue) {
 		return new LangRequest(this, locale, key, defaultValue);
-	}
-	
-	/**
-	 * Gets a value from the default language file with replacements applied
-	 *
-	 * @param key the key to get ny
-	 * @return the returned result or the key if no result was found
-	 */
-	@Contract(pure = true, value = "null -> null")
-	public String getValue(String key) {
-		return getValue(null, key, key);
-	}
-	
-	/**
-	 * Gets a value from the default language file with replacements applied
-	 *
-	 * @param key the key to get by
-	 * @param defaultValue the default value to return if no value was found
-	 * @return the returned result or the value if no result was found
-	 */
-	@Contract(pure = true, value = "_, null -> null")
-	public String getValue(final String key, final String defaultValue) {
-		return getValue(null, key, defaultValue);
-	}
-	
-	/**
-	 * Gets a value from the default language file with replacements applied
-	 *
-	 * @param locale the locale to get the value from
-	 * @param key the key to get by
-	 * @return the returned result or the value if no result was found
-	 */
-	@Contract(pure = true, value = "_, null -> null")
-	public String getValue(final Locale locale, final String key) {
-		return getValue(locale, key, key);
-	}
-	
-	/**
-	 * Gets a value from the default language file with replacements applied
-	 *
-	 * @param locale the locale to get the value from
-	 * @param key the key to get by
-	 * @param defaultValue the default value to return if no value was found
-	 * @return the returned result or the value if no result was found
-	 */
-	@Contract(pure = true, value = "_,null,null -> null; _,_,!null -> !null")
-	public String getValue(final Locale locale, final String key, final String defaultValue) {
-		LangConfig config;
-		
-		var configOptional = getAnyValidLangConfig(locale);
-		if(configOptional.isPresent()){
-			config = configOptional.get();
-		} else {
-			logger.log(Level.INFO, "No lang file could be loaded for request: " + key + " using default value!");
-			return defaultValue;
-		}
-		
-		String editString = config.getString(key);
-		if(editString == null){
-			editString = defaultValue;
-		}
-		
-		for(var mapValue : replacerMap.entrySet()){
-			editString = editString.replace(mapValue.getKey(), mapValue.getValue());
-		}
-		
-		if(config.isUpdateRequest()){
-			config.updateReplacerMap();
-			
-		}
-		
-		for(var mapValue : config.getReplacerMap().entrySet()){
-			editString = editString.replace(mapValue.getKey(), mapValue.getValue());
-		}
-		
-		return editString;
 	}
 	
 	/**
@@ -367,7 +291,7 @@ public final class LangManager{
 	 * @param locale the locale to get the language config for
 	 * @return the language config or empty if none could be found
 	 */
-	private Optional<LangConfig> getAnyValidLangConfig(final Locale locale) {
+	public Optional<LangConfig> getAnyValidLangConfig(final Locale locale) {
 		if(langMap.isEmpty()){
 			return Optional.empty();
 		}
@@ -407,4 +331,11 @@ public final class LangManager{
 		return null;
 	}
 	
+	public Logger getLogger() {
+		return logger;
+	}
+	
+	public Map<String, String> getReplacerMap() {
+		return replacerMap;
+	}
 }
