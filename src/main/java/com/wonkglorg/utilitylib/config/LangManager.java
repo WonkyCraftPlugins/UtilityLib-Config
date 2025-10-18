@@ -2,6 +2,7 @@ package com.wonkglorg.utilitylib.config;
 
 import com.wonkglorg.utilitylib.config.types.Config;
 import com.wonkglorg.utilitylib.config.types.LangConfig;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
@@ -337,37 +338,89 @@ public final class LangManager{
 	/**
 	 * Sends a message to a player from the provided config
 	 *
-	 * @param player the player to send the message to
+	 * @param audience the audience to send the message to
+	 * @param locale the locale to use
 	 * @param key the config key to resolve
 	 * @param defaultValue if no key is found use this value instead
 	 * @param toComponent function to convert to a valid component
 	 */
-	public void sendMessage(@NotNull final Player player,
+	public void sendMessage(@NotNull final Audience audience,
+							final Locale locale,
 							final String key,
 							final String defaultValue,
 							@NotNull Function<String, Component> toComponent) {
-		player.sendMessage(toComponent.apply(getValue(player, key, defaultValue)));
+		audience.sendMessage(toComponent.apply(getValue(locale, key, defaultValue)));
 	}
 	
 	/**
-	 * Sends a message to a player from the provided config
+	 * Sends a message to an audience from the provided config. If the audience is a player returns the config matching their locale, otherwise {@link #defaultLang} lang
 	 *
-	 * @param player the player to send the message to
+	 * @param audience the audience to send the message to
+	 * @param key the config key to resolve
+	 * @param defaultValue if no key is found use this value instead
+	 * @param toComponent function to convert to a valid component
+	 */
+	public void sendMessage(@NotNull final Audience audience,
+							final String key,
+							final String defaultValue,
+							@NotNull Function<String, Component> toComponent) {
+		if(audience instanceof Player player){
+			sendMessage(player, player.locale(), key, defaultValue, toComponent);
+		} else {
+			sendMessage(audience, Locale.ENGLISH, key, defaultValue, toComponent);
+		}
+	}
+	
+	/**
+	 * Sends a message to an audience from the provided config
+	 *
+	 * @param audience the audience to send the message to
+	 * @param locale the locale to use
 	 * @param key the config key to resolve
 	 * @param defaultValue if no key is found use this value instead
 	 */
-	public void sendMessage(@NotNull final Player player, final String key, final String defaultValue) {
-		sendMessage(player, key, defaultValue, MiniMessage.miniMessage()::deserialize);
+	public void sendMessage(@NotNull final Audience audience, final Locale locale, final String key, final String defaultValue) {
+		sendMessage(audience, locale, key, defaultValue, MiniMessage.miniMessage()::deserialize);
 	}
 	
 	/**
-	 * Sends a message to a player from the provided config
+     * Sends a message to an audience from the provided config. If the audience is a player returns the config matching their locale, otherwise {@link #defaultLang} lang
 	 *
-	 * @param player the player to send the message to
+	 * @param audience the audience to send the message to
+	 * @param key the config key to resolve
+	 * @param defaultValue if no key is found use this value instead
+	 */
+	public void sendMessage(@NotNull final Audience audience, final String key, final String defaultValue) {
+		if(audience instanceof Player player){
+			sendMessage(player, player.locale(), key, defaultValue, MiniMessage.miniMessage()::deserialize);
+		} else {
+			sendMessage(audience, Locale.getDefault(), key, defaultValue, MiniMessage.miniMessage()::deserialize);
+		}
+	}
+	
+	/**
+	 * Sends a message to an audience from the provided config
+	 *
+	 * @param audience the audience to send the message to
 	 * @param key the config key to resolve
 	 */
-	public void sendMessage(@NotNull final Player player, final String key) {
-		sendMessage(player, key, key, MiniMessage.miniMessage()::deserialize);
+	public void sendMessage(@NotNull final Audience audience, final Locale locale, final String key) {
+		sendMessage(audience, locale, key, key, MiniMessage.miniMessage()::deserialize);
+	}
+	
+	/**
+	 * Sends a message to an audience from the provided config. If the audience is a player returns the config matching their locale, otherwise {@link #defaultLang} lang
+	 *
+	 * @param audience the audience to send the message to
+	 * @param key the config key to resolve
+	 */
+	public void sendMessage(@NotNull final Audience audience, final String key) {
+		if(audience instanceof Player player){
+			sendMessage(player, player.locale(), key, key, MiniMessage.miniMessage()::deserialize);
+		} else {
+			sendMessage(audience, defaultLang, key, key, MiniMessage.miniMessage()::deserialize);
+		}
+		
 	}
 	
 	/**
