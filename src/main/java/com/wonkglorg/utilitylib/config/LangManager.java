@@ -1,5 +1,6 @@
 package com.wonkglorg.utilitylib.config;
 
+import com.wonkglorg.utilitylib.config.lang.ValueReplacer;
 import com.wonkglorg.utilitylib.config.types.Config;
 import com.wonkglorg.utilitylib.config.types.LangConfig;
 import net.kyori.adventure.audience.Audience;
@@ -348,8 +349,14 @@ public final class LangManager{
 							final Locale locale,
 							final String key,
 							final String defaultValue,
-							@NotNull Function<String, Component> toComponent) {
-		audience.sendMessage(toComponent.apply(getValue(locale, key, defaultValue)));
+							@NotNull Function<String, Component> toComponent,
+							ValueReplacer... replacers) {
+		
+		String value = getValue(locale, key, defaultValue);
+		for(ValueReplacer replacer : replacers){
+			value = replacer.apply(value);
+		}
+		audience.sendMessage(toComponent.apply(value));
 	}
 	
 	/**
@@ -363,11 +370,12 @@ public final class LangManager{
 	public void sendMessage(@NotNull final Audience audience,
 							final String key,
 							final String defaultValue,
-							@NotNull Function<String, Component> toComponent) {
+							@NotNull Function<String, Component> toComponent,
+							ValueReplacer... replacers) {
 		if(audience instanceof Player player){
-			sendMessage(player, player.locale(), key, defaultValue, toComponent);
+			sendMessage(player, player.locale(), key, defaultValue, toComponent, replacers);
 		} else {
-			sendMessage(audience, Locale.ENGLISH, key, defaultValue, toComponent);
+			sendMessage(audience, Locale.ENGLISH, key, defaultValue, toComponent, replacers);
 		}
 	}
 	
@@ -379,22 +387,26 @@ public final class LangManager{
 	 * @param key the config key to resolve
 	 * @param defaultValue if no key is found use this value instead
 	 */
-	public void sendMessage(@NotNull final Audience audience, final Locale locale, final String key, final String defaultValue) {
-		sendMessage(audience, locale, key, defaultValue, MiniMessage.miniMessage()::deserialize);
+	public void sendMessage(@NotNull final Audience audience,
+							final Locale locale,
+							final String key,
+							final String defaultValue,
+							ValueReplacer... replacers) {
+		sendMessage(audience, locale, key, defaultValue, MiniMessage.miniMessage()::deserialize, replacers);
 	}
 	
 	/**
-     * Sends a message to an audience from the provided config. If the audience is a player returns the config matching their locale, otherwise {@link #defaultLang} lang
+	 * Sends a message to an audience from the provided config. If the audience is a player returns the config matching their locale, otherwise {@link #defaultLang} lang
 	 *
 	 * @param audience the audience to send the message to
 	 * @param key the config key to resolve
 	 * @param defaultValue if no key is found use this value instead
 	 */
-	public void sendMessage(@NotNull final Audience audience, final String key, final String defaultValue) {
+	public void sendMessage(@NotNull final Audience audience, final String key, final String defaultValue, ValueReplacer... replacers) {
 		if(audience instanceof Player player){
-			sendMessage(player, player.locale(), key, defaultValue, MiniMessage.miniMessage()::deserialize);
+			sendMessage(player, player.locale(), key, defaultValue, MiniMessage.miniMessage()::deserialize, replacers);
 		} else {
-			sendMessage(audience, Locale.getDefault(), key, defaultValue, MiniMessage.miniMessage()::deserialize);
+			sendMessage(audience, Locale.getDefault(), key, defaultValue, MiniMessage.miniMessage()::deserialize, replacers);
 		}
 	}
 	
@@ -404,8 +416,8 @@ public final class LangManager{
 	 * @param audience the audience to send the message to
 	 * @param key the config key to resolve
 	 */
-	public void sendMessage(@NotNull final Audience audience, final Locale locale, final String key) {
-		sendMessage(audience, locale, key, key, MiniMessage.miniMessage()::deserialize);
+	public void sendMessage(@NotNull final Audience audience, final Locale locale, final String key, ValueReplacer... replacers) {
+		sendMessage(audience, locale, key, key, MiniMessage.miniMessage()::deserialize, replacers);
 	}
 	
 	/**
@@ -414,13 +426,12 @@ public final class LangManager{
 	 * @param audience the audience to send the message to
 	 * @param key the config key to resolve
 	 */
-	public void sendMessage(@NotNull final Audience audience, final String key) {
+	public void sendMessage(@NotNull final Audience audience, final String key, ValueReplacer... replacers) {
 		if(audience instanceof Player player){
-			sendMessage(player, player.locale(), key, key, MiniMessage.miniMessage()::deserialize);
+			sendMessage(player, player.locale(), key, key, MiniMessage.miniMessage()::deserialize, replacers);
 		} else {
-			sendMessage(audience, defaultLang, key, key, MiniMessage.miniMessage()::deserialize);
+			sendMessage(audience, defaultLang, key, key, MiniMessage.miniMessage()::deserialize, replacers);
 		}
-		
 	}
 	
 	/**
