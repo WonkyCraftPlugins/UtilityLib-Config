@@ -13,7 +13,7 @@
 
 ## <a name="introduction"></a>Introduction
 
-Lightweight Config and Language manager library as a seperate module as part of the UtilityLib library
+Lightweight Config and Language manager library.
 
 ## <a name="requirements"></a>Requirements
 
@@ -69,11 +69,11 @@ public final class ExamplePlugin extends JavaPlugin {
 ```
 
 ### Usage
-Once the instance is created, it can be filled by providing the ConfigManager with any type of valid config for example the yaml representation as ConfigYML
+Once the instance is created, it can be filled by providing the ConfigManager with any type of valid config
 ```java
 	@Override
 	public void onEnable() {
-          configManager.add("items", new ConfigYML(this, Path.of("subdirectory", "items.yml")));
+          configManager.add("items", new Config(this, Path.of("subdirectory", "items.yml")));
 	}
 ```
 
@@ -88,8 +88,11 @@ a default lang can also be defined to use if no valid lang was found for the des
           langManager.addLanguage(Locale.GERMAN,new LangConfig(this,"path/to/de.yml"));
 	}
 ```
-To retrieve a value the getValue function can be used which determins the best value to return based on inputs
+To retrieve a value the Langmanager#request function can be used which determins the best value to return based on inputs and allows further modifying the request.
 
+```java
+   lang.request("command-givehead-inventory-full").replace("%target%", target.getName()).sendToAudience(sender);
+```
 
 * Config Manager
   * Adds a singleton ConfigManger to assign and retrieve individual configs from by a programmer specified key.
