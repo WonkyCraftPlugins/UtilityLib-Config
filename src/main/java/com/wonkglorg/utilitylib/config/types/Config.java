@@ -206,7 +206,7 @@ public class Config extends YamlConfiguration{
 	protected void checkFile() {
 		if(!file.exists()){
 			file.getParentFile().mkdirs();
-			InputStream inputStream = plugin.getResource(sourcePath.toString().replace("\\\\", "/"));
+			InputStream inputStream = plugin.getResource(sourcePath.toString().replace(File.separatorChar, '/'));
 			if(inputStream != null){
 				try{
 					Files.copy(inputStream, destinationPath);
