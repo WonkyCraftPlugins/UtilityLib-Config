@@ -1,7 +1,6 @@
 package com.wonkglorg.utilitylib.config;
 
 import com.wonkglorg.utilitylib.config.types.Config;
-import com.wonkglorg.utilitylib.config.types.ConfigYML;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -184,7 +183,7 @@ public final class ConfigManager{
 			if(!file.getName().endsWith(".yml")){
 				continue;
 			}
-			Config config = new ConfigYML(plugin, file.toPath());
+			Config config = new Config(plugin, file.toPath());
 			add(config.name(), config);
 			tempConfigs.put(file.getName(), config);
 		}

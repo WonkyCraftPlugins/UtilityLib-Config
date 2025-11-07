@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 @SuppressWarnings("unused")
-public class LangConfig extends ConfigYML {
+public class LangConfig extends Config{
 
     /**
      * Path to the placeholder definitions in the lang file, all keys defined under this path will be added to the automatic replacer map

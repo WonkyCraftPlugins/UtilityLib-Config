@@ -147,7 +147,7 @@ public class LangRequest{
 			} else {
 				String value = getValue(this.locale, key, defaultValue);
 				value = updateResult(value);
-				player.sendMessage(toComponent.apply(value));
+				audience.sendMessage(toComponent.apply(value));
 			}
 		} else {
 			audience.sendMessage(toComponent.apply(this.result));
@@ -185,7 +185,6 @@ public class LangRequest{
 		
 		if(config.isUpdateRequest()){
 			config.updateReplacerMap();
-			
 		}
 		
 		for(var mapValue : config.getReplacerMap().entrySet()){
