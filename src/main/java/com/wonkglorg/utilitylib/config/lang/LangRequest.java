@@ -126,6 +126,22 @@ public class LangRequest{
 	}
 	
 	/**
+	 *
+	 * @param toComponent the converter to use
+	 * @return the output as a component
+	 */
+	public Component toComponent(Function<String, Component> toComponent) {
+		return toComponent.apply(result);
+	}
+	
+	/**
+	 * @return the output as a component
+	 */
+	public Component toComponent() {
+		return toComponent(MiniMessage.miniMessage()::deserialize);
+	}
+	
+	/**
 	 * Sends the request's result to the given audience using the MiniMessage formatting.
 	 *
 	 * @param audience if the audience is a {@link Player} requests their locale to modify the message with unless {@link #forceLocale} is set to true.
