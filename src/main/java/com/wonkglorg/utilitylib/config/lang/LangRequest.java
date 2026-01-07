@@ -4,12 +4,16 @@ import com.wonkglorg.utilitylib.config.LangManager;
 import com.wonkglorg.utilitylib.config.types.LangConfig;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
@@ -42,6 +46,8 @@ public class LangRequest{
 	 * Map of all replacements applied to this request
 	 */
 	private final Map<String, String> replacements = new HashMap<>();
+	
+	private final Map<String, Component> componentReplacements = new HashMap<>();
 	/**
 	 * The initial returned result without any other modifications
 	 */
@@ -76,6 +82,11 @@ public class LangRequest{
 	public LangRequest replace(String value, String replacement) {
 		replacements.put(value, replacement);
 		result = result.replace(value, replacement);
+		return this;
+	}
+	
+	public LangRequest replace(String value, Component replacement) {
+		componentReplacements.put(value, replacement);
 		return this;
 	}
 	
@@ -125,20 +136,67 @@ public class LangRequest{
 		return result;
 	}
 	
+	private Component toComponent(Function<String, Component> toComponent, String result) {
+		if(componentReplacements.isEmpty()){
+			return toComponent.apply(result);
+		}
+		
+		List<String> keys = componentReplacements.keySet().stream().sorted(Comparator.comparingInt(String::length).reversed()).toList();
+		
+		List<Component> components = new ArrayList<>();
+		int index = 0;
+		int length = result.length();
+		
+		while(index < length){
+			int nearestPos = length;
+			String nearestKey = null;
+			
+			for(String key : keys){
+				int pos = result.indexOf(key, index);
+				if(pos >= 0 && pos < nearestPos){
+					nearestPos = pos;
+					nearestKey = key;
+				}
+			}
+			
+			if(nearestKey == null){
+				if(index < length){
+					components.add(toComponent.apply(result.substring(index)));
+				}
+				break;
+			}
+			
+			if(nearestPos > index){
+				components.add(toComponent.apply(result.substring(index, nearestPos)));
+			}
+			
+			Component replacement = componentReplacements.get(nearestKey);
+			if(replacement != null){
+				components.add(replacement);
+			} else {
+				components.add(toComponent.apply(nearestKey));
+			}
+			
+			index = nearestPos + nearestKey.length();
+		}
+		
+		return Component.join(JoinConfiguration.noSeparators(), components);
+	}
+	
 	/**
 	 *
 	 * @param toComponent the converter to use
 	 * @return the output as a component
 	 */
 	public Component toComponent(Function<String, Component> toComponent) {
-		return toComponent.apply(result);
+		return toComponent(toComponent, result);
 	}
 	
 	/**
 	 * @return the output as a component
 	 */
 	public Component toComponent() {
-		return toComponent(MiniMessage.miniMessage()::deserialize);
+		return toComponent(MiniMessage.miniMessage()::deserialize, result);
 	}
 	
 	/**
@@ -159,14 +217,14 @@ public class LangRequest{
 	public void sendToAudience(@NotNull Audience audience, Function<String, Component> toComponent) {
 		if(audience instanceof Player player){
 			if(player.locale() == locale || forceLocale){
-				audience.sendMessage(toComponent.apply(this.result));
+				audience.sendMessage(toComponent(toComponent, this.result));
 			} else {
 				String value = getValue(this.locale, key, defaultValue);
 				value = updateResult(value);
-				audience.sendMessage(toComponent.apply(value));
+				audience.sendMessage(toComponent(toComponent, this.result));
 			}
 		} else {
-			audience.sendMessage(toComponent.apply(this.result));
+			audience.sendMessage(toComponent(toComponent, this.result));
 		}
 	}
 	
