@@ -104,8 +104,8 @@ public class Config extends YamlConfiguration{
 	 * @return {@link Map} of results.
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> Map<String, T> getEntries(@NotNull String path) {
-		if(path.isBlank()){
+	public <T> Map<String, T> getEntries(String path) {
+		if(path == null || path.isBlank()){
 			return (Map<String, T>) getValues(false);
 		}
 		ConfigurationSection section = getConfigurationSection(path);
