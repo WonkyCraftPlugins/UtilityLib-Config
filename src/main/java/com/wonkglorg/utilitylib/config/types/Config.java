@@ -53,6 +53,7 @@ public class Config extends YamlConfiguration{
 				destinationPath.toString());
 		logger = plugin.getLogger();
 		file = new File(this.destinationPath.toString());
+		silentLoad();
 	}
 	
 	/**
