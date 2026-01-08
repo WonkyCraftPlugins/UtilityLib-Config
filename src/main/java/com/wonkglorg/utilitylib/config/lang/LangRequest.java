@@ -90,6 +90,48 @@ public class LangRequest{
 	/**
 	 * Replaces the given value with its replacement
 	 */
+	public LangRequest replace(String value, char replacement) {
+		return replace(value, String.valueOf(replacement));
+	}
+	
+	/**
+	 * Replaces the given value with its replacement
+	 */
+	public LangRequest replace(String value, short replacement) {
+		return replace(value, String.valueOf(replacement));
+	}
+	
+	/**
+	 * Replaces the given value with its replacement
+	 */
+	public LangRequest replace(String value, int replacement) {
+		return replace(value, String.valueOf(replacement));
+	}
+	
+	/**
+	 * Replaces the given value with its replacement
+	 */
+	public LangRequest replace(String value, long replacement) {
+		return replace(value, String.valueOf(replacement));
+	}
+	
+	/**
+	 * Replaces the given value with its replacement
+	 */
+	public LangRequest replace(String value, double replacement) {
+		return replace(value, String.valueOf(replacement));
+	}
+	
+	/**
+	 * Replaces the given value with its replacement
+	 */
+	public LangRequest replace(String value, float replacement) {
+		return replace(value, String.valueOf(replacement));
+	}
+	
+	/**
+	 * Replaces the given value with its replacement
+	 */
 	public LangRequest replace(String value, Objects replacement) {
 		if(replacement == null) return this;
 		replacements.put(value, replacement.toString());
