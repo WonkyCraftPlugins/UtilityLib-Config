@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -80,12 +81,24 @@ public class LangRequest{
 	 * Replaces the given value with its replacement
 	 */
 	public LangRequest replace(String value, String replacement) {
+		if(replacement == null) return this;
 		replacements.put(value, replacement);
 		result = result.replace(value, replacement);
 		return this;
 	}
 	
+	/**
+	 * Replaces the given value with its replacement
+	 */
+	public LangRequest replace(String value, Objects replacement) {
+		if(replacement == null) return this;
+		replacements.put(value, replacement.toString());
+		result = result.replace(value, replacement.toString());
+		return this;
+	}
+	
 	public LangRequest replace(String value, Component replacement) {
+		if(replacement == null) return this;
 		componentReplacements.put(value, replacement);
 		return this;
 	}
