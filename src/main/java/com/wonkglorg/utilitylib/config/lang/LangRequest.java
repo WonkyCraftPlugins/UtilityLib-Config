@@ -129,16 +129,6 @@ public class LangRequest{
 		return replace(value, String.valueOf(replacement));
 	}
 	
-	/**
-	 * Replaces the given value with its replacement
-	 */
-	public LangRequest replace(String value, Object replacement) {
-		if(replacement == null) return this;
-		replacements.put(value, replacement.toString());
-		result = result.replace(value, replacement.toString());
-		return this;
-	}
-	
 	public LangRequest replace(String value, Component replacement) {
 		if(replacement == null) return this;
 		componentReplacements.put(value, replacement);
