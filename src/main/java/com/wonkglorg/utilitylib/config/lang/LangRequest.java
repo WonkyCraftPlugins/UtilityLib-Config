@@ -11,7 +11,6 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -19,6 +18,9 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * A Language Value request which can be further modified with additional properties and modifiers.
@@ -56,6 +58,10 @@ public class LangRequest{
 	 * The current result made after all values are collected
 	 */
 	private String result;
+	/**
+	 * Pattern for component replacers
+	 */
+	private Pattern pattern;
 	/**
 	 * Weather or not the initially provided locale should be forced. If false certain methods may re request the message in the given language such as {@link #sendToAudience(Audience)}
 	 */
@@ -130,28 +136,8 @@ public class LangRequest{
 	
 	public LangRequest replace(String value, Component replacement) {
 		if(replacement == null) return this;
+		pattern = null;
 		componentReplacements.put(value, replacement);
-		return this;
-	}
-	
-	/**
-	 * Replaces the given value with its replacement
-	 */
-	public LangRequest replace(String value1, String replacement1, String value2, String replacement2) {
-		replacements.put(value1, replacement1);
-		replacements.put(value2, replacement2);
-		result = result.replace(value1, replacement1).replace(value2, replacement2);
-		return this;
-	}
-	
-	/**
-	 * Replaces the given value with its replacement
-	 */
-	public LangRequest replace(String value1, String replacement1, String value2, String replacement2, String value3, String replacement3) {
-		replacements.put(value1, replacement1);
-		replacements.put(value2, replacement2);
-		replacements.put(value3, replacement3);
-		result = result.replace(value1, replacement1).replace(value2, replacement2).replace(value3, replacement3);
 		return this;
 	}
 	
@@ -185,40 +171,28 @@ public class LangRequest{
 			return toComponent.apply(result);
 		}
 		
-		List<String> keys = componentReplacements.keySet().stream().sorted(Comparator.comparingInt(String::length).reversed()).toList();
-		
-		List<Component> components = new ArrayList<>();
-		StringBuilder buffer = new StringBuilder();
-		
-		int index = 0;
-		while(index < result.length()){
-			boolean matched = false;
-			
-			for(String key : keys){
-				if(result.startsWith(key, index)){
-					if(!buffer.isEmpty()){
-						components.add(toComponent.apply(buffer.toString()));
-						buffer.setLength(0);
-					}
-					
-					Component replacement = componentReplacements.get(key);
-					components.add(replacement != null ? replacement : toComponent.apply(key));
-					
-					index += key.length();
-					matched = true;
-					break;
-				}
-			}
-			
-			if(!matched){
-				buffer.append(result.charAt(index));
-				index++;
-			}
+		if(pattern == null){
+			pattern = Pattern.compile(componentReplacements.keySet().stream().map(Pattern::quote).collect(Collectors.joining("|")));
 		}
 		
-		// flush trailing text
-		if(buffer.length() > 0){
-			components.add(toComponent.apply(buffer.toString()));
+		Matcher matcher = pattern.matcher(result);
+		
+		List<Component> components = new ArrayList<>();
+		int last = 0;
+		
+		while(matcher.find()){
+			if(matcher.start() > last){
+				components.add(toComponent.apply(result.substring(last, matcher.start())));
+			}
+			
+			String key = matcher.group();
+			components.add(componentReplacements.getOrDefault(key, toComponent.apply(key)));
+			
+			last = matcher.end();
+		}
+		
+		if(last < result.length()){
+			components.add(toComponent.apply(result.substring(last)));
 		}
 		
 		return Component.join(JoinConfiguration.noSeparators(), components);
@@ -260,8 +234,7 @@ public class LangRequest{
 			if(player.locale() == locale || forceLocale){
 				audience.sendMessage(toComponent(toComponent, this.result));
 			} else {
-				String value = getValue(this.locale, key, defaultValue);
-				value = updateResult(value);
+				this.result = updateResult(getValue(this.locale, key, defaultValue));
 				audience.sendMessage(toComponent(toComponent, this.result));
 			}
 		} else {
