@@ -188,15 +188,22 @@ public class LangRequest{
 		List<String> keys = componentReplacements.keySet().stream().sorted(Comparator.comparingInt(String::length).reversed()).toList();
 		
 		List<Component> components = new ArrayList<>();
-		int index = 0;
+		StringBuilder buffer = new StringBuilder();
 		
+		int index = 0;
 		while(index < result.length()){
 			boolean matched = false;
 			
 			for(String key : keys){
 				if(result.startsWith(key, index)){
+					if(!buffer.isEmpty()){
+						components.add(toComponent.apply(buffer.toString()));
+						buffer.setLength(0);
+					}
+					
 					Component replacement = componentReplacements.get(key);
 					components.add(replacement != null ? replacement : toComponent.apply(key));
+					
 					index += key.length();
 					matched = true;
 					break;
@@ -204,9 +211,14 @@ public class LangRequest{
 			}
 			
 			if(!matched){
-				components.add(toComponent.apply(String.valueOf(result.charAt(index))));
+				buffer.append(result.charAt(index));
 				index++;
 			}
+		}
+		
+		// flush trailing text
+		if(buffer.length() > 0){
+			components.add(toComponent.apply(buffer.toString()));
 		}
 		
 		return Component.join(JoinConfiguration.noSeparators(), components);
