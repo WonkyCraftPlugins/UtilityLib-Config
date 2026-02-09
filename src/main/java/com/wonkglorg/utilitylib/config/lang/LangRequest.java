@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -190,39 +189,24 @@ public class LangRequest{
 		
 		List<Component> components = new ArrayList<>();
 		int index = 0;
-		int length = result.length();
 		
-		while(index < length){
-			int nearestPos = length;
-			String nearestKey = null;
+		while(index < result.length()){
+			boolean matched = false;
 			
 			for(String key : keys){
-				int pos = result.indexOf(key, index);
-				if(pos >= 0 && pos < nearestPos){
-					nearestPos = pos;
-					nearestKey = key;
+				if(result.startsWith(key, index)){
+					Component replacement = componentReplacements.get(key);
+					components.add(replacement != null ? replacement : toComponent.apply(key));
+					index += key.length();
+					matched = true;
+					break;
 				}
 			}
 			
-			if(nearestKey == null){
-				if(index < length){
-					components.add(toComponent.apply(result.substring(index)));
-				}
-				break;
+			if(!matched){
+				components.add(toComponent.apply(String.valueOf(result.charAt(index))));
+				index++;
 			}
-			
-			if(nearestPos > index){
-				components.add(toComponent.apply(result.substring(index, nearestPos)));
-			}
-			
-			Component replacement = componentReplacements.get(nearestKey);
-			if(replacement != null){
-				components.add(replacement);
-			} else {
-				components.add(toComponent.apply(nearestKey));
-			}
-			
-			index = nearestPos + nearestKey.length();
 		}
 		
 		return Component.join(JoinConfiguration.noSeparators(), components);
