@@ -25,12 +25,11 @@ class LangRequestTest{
 		langManager.addLanguage(langConfig, Locale.US);
 		langManager.addLanguage(langConfig, Locale.ENGLISH);
 		
-		
-		
-		for(int i = 0; i< 9000;i++){
+		for(int i = 0; i < 9000; i++){
 			LangRequest langRequest = new LangRequest(langManager, Locale.US, "test", "test");
 			
-			List<Component> components = langRequest.replace("%placeholder%", "Replacement").replace("%placeholder2%", Component.text("EEEEEEEEEEEEEEE")).toComponent();
+			List<Component> components = langRequest.replace("%placeholder%", "Replacement").replace("%placeholder2%",
+					Component.text("EEEEEEEEEEEEEEE")).toComponent();
 		}
 	}
 	
