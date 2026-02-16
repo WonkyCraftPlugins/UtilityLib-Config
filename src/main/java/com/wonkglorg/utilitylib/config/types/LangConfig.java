@@ -70,8 +70,8 @@ public class LangConfig extends Config{
     @Override
     public void load() {
         setUpdateRequest(true);
-        checkFile();
         try {
+            checkFile();
             load(file);
             logger.log(Level.INFO, "Loaded data from " + name + "!");
         } catch (InvalidConfigurationException | IOException e) {
@@ -83,8 +83,8 @@ public class LangConfig extends Config{
 	@Override
     public void silentLoad() {
         setUpdateRequest(true);
-        checkFile();
         try {
+            checkFile();
             load(file);
         } catch (InvalidConfigurationException | IOException e) {
             logger.log(Level.WARNING, "Error loading data from " + name + "!");

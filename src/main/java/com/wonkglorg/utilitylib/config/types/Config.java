@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Map;
@@ -21,14 +22,13 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static java.util.logging.Logger.getLogger;
 
 /**
  * @author Wonkglorg
  */
 @SuppressWarnings({"unused", "ResultOfMethodCallIgnored"})
 public class Config extends YamlConfiguration{
-	
-	//Add version control. Keep version in yml and add all new values which do not exist yet if current version is higher than the one already existing
 	protected final JavaPlugin plugin;
 	protected final String name;
 	protected final Path sourcePath;
@@ -76,6 +76,25 @@ public class Config extends YamlConfiguration{
 	 */
 	public Config(@NotNull JavaPlugin plugin, @NotNull Path path) {
 		this(plugin, path, Path.of(plugin.getDataFolder().getPath(), path.toString()));
+	}
+	
+	private Config(@NotNull Path sourcePath) {
+		this.plugin = null;
+		this.name = sourcePath.getFileName().toString();
+		this.sourcePath = sourcePath;
+		this.destinationPath = null;
+		this.file = sourcePath.toFile();
+		this.logger = getLogger("Config");
+		silentLoad();
+	}
+	
+	/**
+	 * This does not save the resource into the plugin dir but references one from a third location
+	 *
+	 * @param path the
+	 */
+	public static Config fromExternalPath(@NotNull Path path) {
+		return new Config(path);
 	}
 	
 	/**
@@ -151,8 +170,8 @@ public class Config extends YamlConfiguration{
 	}
 	
 	public void load() {
-		checkFile();
 		try{
+			checkFile();
 			load(file);
 			logger.log(Level.INFO, "Loaded data from " + name + "!");
 		} catch(InvalidConfigurationException | IOException e){
@@ -162,8 +181,8 @@ public class Config extends YamlConfiguration{
 	}
 	
 	public void silentLoad() {
-		checkFile();
 		try{
+			checkFile();
 			load(file);
 		} catch(InvalidConfigurationException | IOException e){
 			logger.log(Level.SEVERE, e.getMessage());
@@ -172,9 +191,8 @@ public class Config extends YamlConfiguration{
 	}
 	
 	public void save() {
-		checkFile();
 		try{
-			
+			checkFile();
 			save(file);
 			logger.log(Level.INFO, "Saved data to " + name + "!");
 		} catch(IOException e){
@@ -184,8 +202,8 @@ public class Config extends YamlConfiguration{
 	}
 	
 	public void silentSave() {
-		checkFile();
 		try{
+			checkFile();
 			save(file);
 		} catch(IOException e){
 			logger.log(Level.WARNING, "Error saving data to " + name + "!");
@@ -204,8 +222,12 @@ public class Config extends YamlConfiguration{
 	/**
 	 * Checks if file exists in path, else create the file and all parent directories needed.
 	 */
-	protected void checkFile() {
+	protected void checkFile() throws NoSuchFileException {
 		if(!file.exists()){
+			if(destinationPath == null){
+				throw new NoSuchFileException("External Resource does not exist!");
+			}
+			
 			file.getParentFile().mkdirs();
 			InputStream inputStream = plugin.getResource(sourcePath.toString().replace(File.separatorChar, '/'));
 			if(inputStream != null){
