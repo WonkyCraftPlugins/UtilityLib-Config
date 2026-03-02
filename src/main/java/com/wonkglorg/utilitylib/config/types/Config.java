@@ -1,10 +1,12 @@
 package com.wonkglorg.utilitylib.config.types;
 
+import com.wonkglorg.utilitylib.config.objects.StoredEntity;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -245,6 +247,19 @@ public class Config extends YamlConfiguration{
 				}
 			}
 		}
+	}
+	
+	public StoredEntity getEntity(@NotNull String path) {
+		ConfigurationSection section = getConfigurationSection(path);
+		if(section == null) return null;
+		return new StoredEntity(section);
+	}
+	
+	public void setEntity(@NotNull String path, Entity entity) {
+		if(entity == null){
+			set(path, null);
+		}
+		set(path, new StoredEntity(entity));
 	}
 	
 	@Override
