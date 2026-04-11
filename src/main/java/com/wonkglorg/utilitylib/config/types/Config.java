@@ -3,7 +3,6 @@ package com.wonkglorg.utilitylib.config.types;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -18,7 +17,6 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -156,16 +154,35 @@ public class Config extends YamlConfiguration{
 		set(path, location.serialize());
 	}
 	
-	public void updateConfig() {
+	/**
+	 * Add all values from the default config to the existing one if not present
+	 */
+	public void syncWithDefaults() {
+		if(plugin == null) return; // external configs have no defaults
 		
-		FileConfiguration existing = YamlConfiguration.loadConfiguration(file);
+		InputStream resource = plugin.getResource(sourcePath.toString().replace(File.separatorChar, '/'));
+		if(resource == null) return;
 		
-		FileConfiguration newConfig = YamlConfiguration.loadConfiguration(sourcePath.toFile());
+		YamlConfiguration defConfig = new YamlConfiguration();
+		try{
+			defConfig.loadFromString(new String(resource.readAllBytes()));
+		} catch(IOException | InvalidConfigurationException e){
+			logger.log(Level.SEVERE, "Failed to load default config for " + name, e);
+			return;
+		}
 		
-		for(Entry<String, Object> entry : newConfig.getValues(true).entrySet()){
-			if(!existing.contains(entry.getKey())){
-				existing.set(entry.getKey(), entry.getValue());
+		boolean changed = false;
+		
+		for(Map.Entry<String, Object> entry : defConfig.getValues(true).entrySet()){
+			if(!this.contains(entry.getKey())){
+				this.set(entry.getKey(), entry.getValue());
+				changed = true;
 			}
+		}
+		
+		if(changed){
+			silentSave();
+			logger.log(Level.INFO, "Updated config " + name + " with missing default values.");
 		}
 	}
 	

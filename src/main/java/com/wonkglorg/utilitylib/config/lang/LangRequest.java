@@ -86,7 +86,9 @@ public class LangRequest{
 	 * Replaces the given value with its replacement
 	 */
 	public LangRequest replace(String value, String replacement) {
-		if(replacement == null) return this;
+		if(replacement == null){
+			replacement = "";
+		}
 		replacements.put(value, replacement);
 		for(int i = 0; i < result.size(); i++){
 			String input = result.get(i);
